@@ -1,86 +1,87 @@
 import serial
 import time
 
-lastCoords = [0, 0, 0]
+last_coordinates = [0, 0, 0]
 ser = None
 while ser is None:
     time.sleep(3)
     try:
         ser = serial.Serial('COM9', 115200)
-    except BaseException:
+    except serial.SerialException:
         print("Ожидание подключения SerialPort...")
         ser = None
 moveSpeed = 10000
 while ser.in_waiting:
     print(ser.readline())
 
-def sendMove(x, y, z):
-    global ser, lastCoords
-    if input(f'Подтвердить действие: "G01 X{x} Y{y} Z{z} F{moveSpeed}"? ') == "+":
-        sendGCode(f'G01 X{x} Y{y} Z{z} F{moveSpeed}\n')
+
+def send_move(x, y, z):
+    global ser, last_coordinates
+    # if input(f'Подтвердить действие: "G01 X{x} Y{y} Z{z} F{moveSpeed}"? ') == "+":
+    send_g_code(f'G01 X{x} Y{y} Z{z} F{moveSpeed}\n')
     while ser.in_waiting:
         print(ser.readline())
-    # time.sleep(__getTime(lastCoords, [x, y, z]))
-    lastCoords = [x, y, z]
+    time.sleep(get_time(last_coordinates, [x, y, z]))
+    last_coordinates = [x, y, z]
 
 
-def sendCutOn():
+def send_cut_on():
     global ser
-    if input("Подтвердить действие: \"G01 E0 F800\"? ") == "+":
-        sendGCode("G01 E0 F800\n")
+    # if input("Подтвердить действие: \"G01 E0 F800\"? ") == "+":
+    send_g_code("G01 E0 F10000\n")
     while ser.in_waiting:
         print(ser.readline())
     time.sleep(1)
 
 
-def sendCutOff():
+def send_cut_off():
     global ser
-    if input("Подтвердить действие: \"G01 E75 F800\"? ") == "+":
-        sendGCode("G01 E15 F800\n")
+    # if input("Подтвердить действие: \"G01 E75 F800\"? ") == "+":
+    send_g_code("G01 E20 F10000\n")
     while ser.in_waiting:
         print(ser.readline())
     time.sleep(1)
 
 
-def sendResetCoords():
-    global ser, lastCoords
-    if input("Подтвердить действие: \"G92 E75 X0 Y0 Z0\"? ") == "+":
-        sendGCode("G92 E0 X0 Y0 Z0\n")
+def send_reset_coordinates():
+    global ser, last_coordinates
+    # if input("Подтвердить действие: \"G92 E75 X0 Y0 Z0\"? ") == "+":
+    send_g_code("G92 E20 X0 Y0 Z0\n")
     while ser.in_waiting:
         print(ser.readline())
-    lastCoords = [0, 0, 0]
+    last_coordinates = [0, 0, 0]
 
 
-def goToGlobalZero():
-    global ser, lastCoords
+def go_to_global_zero():
+    global ser, last_coordinates
     # if input("Подтвердить действие: \"G28\"? ") == "+":
-    sendGCode("G28\n")
+    send_g_code("G28\n")
     while ser.in_waiting:
         print(ser.readline())
-    lastCoords = [0, 0, 0]
+    last_coordinates = [0, 0, 0]
 
 
-def sendGCode(code):
+def send_g_code(code):
     global ser
     try:
         ser.write(code.encode('ascii'))
-    except BaseException:
-        print("Произошла какая-то ошибка!")
+    except serial.SerialException:
         ser = None
         while ser is None:
             time.sleep(3)
             try:
                 ser = serial.Serial('COM9', 115200)
-            except BaseException:
+            except serial.SerialException:
                 print("Ожидание подключения SerialPort...")
                 ser = None
         ser.write(code.encode('ascii'))
 
 
-def __getTime(lastCoordsF, newCoords):
-    x0, y0, z0, x1, y1, z1 = lastCoordsF[0], lastCoordsF[1], lastCoordsF[2], newCoords[0], newCoords[1], newCoords[2]
-    dist = ((x1-x0)**2+(y1-y0)**2+(z1-z0)**2)**0.5
-    return dist//moveSpeed+3
+def get_time(first_coordinates, new_coordinates):
+    x0, y0, z0, x1, y1, z1 = first_coordinates[0], first_coordinates[1], first_coordinates[2], \
+                             new_coordinates[0], new_coordinates[1], new_coordinates[2]
+    dist = ((x1 - x0) ** 2 + (y1 - y0) ** 2 + (z1 - z0) ** 2) ** 0.5
+    return dist // moveSpeed + 3
 
 
 def disconnect():
@@ -89,7 +90,7 @@ def disconnect():
 
 def main():
     global ser
-    while(True):
+    while True:
         s = input("Введите G-Code: ") + "\n"
         if s == "exit\n":
             disconnect()

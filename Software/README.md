@@ -1,2 +1,8 @@
 # StrawberryCollector
-Strawberry collector robot for SIRIUS project shift
+## Программа технического зрения для распознавания плодоножек клубники
+Лагерь СИРИУС, Научная смена ХМАО 2019
+ссылки opencv yolo
+как установить 
+как запускать
+гифку с клубничками
+
